@@ -56,6 +56,11 @@ Revision history:
 * Fix export as a module.
 * Changed minifier to UglifyJS.
 
+### 2.0.4
+
+* Multiple tables export
+* CSS embedding
+
 Compatibility
 -------------
 

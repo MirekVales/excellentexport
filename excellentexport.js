@@ -1,13 +1,31 @@
 /**
- * ExcellentExport 2.0.3
+ * ExcellentExport 2.0.4
  * A client side Javascript export to Excel.
  *
- * @author: Jordi Burgos (jordiburgos@gmail.com)
- * @url: https://github.com/jmaister/excellentexport
+ * @author: Jordi Burgos (jordiburgos@gmail.com), Mirek Vales
+ * @fork-url: https://github.com/mirekvales/excellentexport
+ * @base-url: https://github.com/jmaister/excellentexport
  *
  */
 /*jslint browser: true, bitwise: true, vars: true, white: true */
 /*global define, exports, module */
+
+    function getDocument(url)
+    {
+        if (window.XMLHttpRequest)
+        {
+            xmlhttp = new XMLHttpRequest();
+        }
+        else
+        {
+            // IE5, IE6
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+
+        xmlhttp.open("GET", url, false);
+        xmlhttp.send();
+	    return xmlhttp.responseText;
+    }
 
 (function (global) {
     'use strict';
@@ -47,6 +65,7 @@ var ExcellentExport = (function() {
     var version = "2.0.3";
     var uri = {excel: 'data:application/vnd.ms-excel;base64,', csv: 'data:application/csv;base64,'};
     var template = {excel: '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta name=ProgId content=Excel.Sheet> <meta name=Generator content="Microsoft Excel 11"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'};
+    var templateMultiple = {excel: '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta name=ProgId content=Excel.Sheet> <meta name=Generator content="Microsoft Excel 11"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><style type="text/css">{styledefinition}</style></head><body>{tables}</body></html>'};
     var csvDelimiter = ",";
     var csvNewLine = "\r\n";
     var base64 = function(s) {
@@ -122,6 +141,20 @@ var ExcellentExport = (function() {
             table = get(table);
             var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML};
             var b64 = base64(format(template.excel, ctx));
+            return createDownloadLink(anchor, b64, 'application/vnd.ms-excel','export.xls');
+        },
+        excelAll: function(anchor, styleUrl) {
+            var tables = document.getElementsByTagName("table");
+            var tablesString = "";
+            for (var i = 0; i < tables.length; i=i+1)
+            {
+                tablesString += "<table>" + tables[i].innerHTML + "</table>";
+            }
+	        var output = templateMultiple.excel
+            .replace("{tables}", tablesString)
+            .replace("{worksheet}", "Export")
+            .replace("{styledefinition}", getDocument(styleUrl));
+            var b64 = base64(output);
             return createDownloadLink(anchor, b64, 'application/vnd.ms-excel','export.xls');
         },
         csv: function(anchor, table, delimiter, newLine) {
